@@ -1,11 +1,12 @@
-from dataclasses import dataclass
 import random
-
+from dataclasses import dataclass
 
 @dataclass
 class Card:
     value: str
     _reshuffle: bool
+    _lost: bool
+    _function: callable
 
     def __str__(self) -> str:
         return self.value
@@ -20,17 +21,17 @@ class Deck:
 
     def _initialize(self) -> None:
         # Set up the deck from scratch
-        self._cards.append(Card('Null', True))
-        self._cards.append(Card('2x', True))
+        self._cards.append(Card('Null', True, False, lambda x: x * 0))
+        self._cards.append(Card('2x', True, False, lambda x: x * 2))
 
-        self._cards.append(Card('-2', False))
-        self._cards.append(Card('+2', False))
+        self._cards.append(Card('-2', False, False))
+        self._cards.append(Card('+2', False, False))
 
         for _ in range(5):
-            self._cards.append(Card('-1', False))
-            self._cards.append(Card('+1', False))
+            self._cards.append(Card('-1', False, False))
+            self._cards.append(Card('+1', False, False))
 
-        self._cards.extend([Card('+0', False) for _ in range(6)])
+        self._cards.extend([Card('+0', False, False) for _ in range(6)])
 
         # Initially shuffle the cards
         self._reshuffle()
@@ -46,7 +47,9 @@ class Deck:
     def draw(self) -> Card:
         # Get the next card off the deck
         card = self._cards.pop(0)
-        self._drawn_cards.append(card)
+
+        if not card._lost:
+            self._drawn_cards.append(card)
 
         # Reshuffle if the card wants us to, or we are out of cards
         if card._reshuffle or not self._cards:
